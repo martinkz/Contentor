@@ -1,0 +1,354 @@
+<!doctype html>
+<html class="no-js" prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="author" content="Global Radio">
+
+    <title>Contentor</title>
+
+    <style>
+        body {
+            padding-bottom: 1em;
+            background-color: #eee;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        h2 { margin: 0; padding: 0; }
+        ul { margin: 1px 0 }
+        input { width: 300px }
+    </style>
+</head>
+
+<body>
+
+<div id="vue-form">
+    <ul class="form-container">
+        <section-field
+                v-for="item,name in structure"
+                :item="item"
+                :name="name"
+                :compound-name="name"
+                :content-ref="content[name]"
+                :sectionlevel="1"
+                :options="item.options"
+                :key="item.id">
+        </section-field>
+    </ul>
+
+    <p>
+        <button id="submit" type="button">Submit</button>
+    </p>
+</div>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+
+<script>
+    let structure = {
+        classic: {
+            home: {
+                video_section: {
+                    __options__: { label: "Custom section label" },
+                    title: {
+                        __type__: "text",
+                        __options__: { wide: true, label: "fkdfsdfdksfsdfsd" }
+                    },
+                    simple_array: {
+                        __type__: "template",
+                        item: "radio",
+                    },
+                    copy: "textarea",
+                    video_carousel : {
+                        __type__: "template",
+                        video: {
+                            __type__: "text",
+                            __options__: { min: 10, max: 20, label: "fkdfsdfdksfsdfsd" }
+                        },
+                        __options__: { "label": "sxkckcdskf cdcxxcv" },
+                    },
+                    cta_button: "cta",
+                },
+                contestants_section: {
+                    title: "text",
+                    contestants: {
+                        __type__: "template",
+                        name: "text",
+                        sub: "text",
+                        blurb: "textarea",
+                        on: "checkbox",
+                        images: {
+                            __type__: "template",
+                            __options__: { min: 3, max: 10, label: "image carousel" },
+                            image: "text",
+                        },
+                    },
+                },
+            }
+        }
+    };
+
+    let content = {
+        "classic": {
+            "home": {
+                // "video_section": {
+                //     "title": "Video section lorem ipsum",
+                //     "simple_array": [
+                //         "dsa",
+                //         "fdg",
+                //         "rwe"
+                //     ],
+                //     "copy": "Lorem ipsum copy",
+                //     "video_carousel": [
+                //         { "video" : "258985646" },
+                //         { "video" : "258998364" },
+                //         { "video" : "258998353" },
+                //     ],
+                //     "cta_button": "Learn More"
+                // },
+                // "contestants_section": {
+                //     "title": "Contestants title",
+                //     "contestants": [
+                //         {
+                //             "name": "Diana Newman",
+                //             "sub": "American, 28 years old",
+                //             "blurb": "Diana took singing lessons...",
+                //             "on": true,
+                //             "images": [
+                //                 { "image": "image-1.jpg" },
+                //                 { "image": "image-2.jpg" },
+                //                 { "image": "image-3.jpg" },
+                //             ]
+                //         },
+                //         {
+                //             "name": "Denis Milo",
+                //             "sub": "German, 27 years old",
+                //             "blurb": "Singing helped Denis...",
+                //             "on": true,
+                //             "images": [
+                //                 { "image": "image-4.jpg" },
+                //                 { "image": "image-5.jpg" },
+                //                 { "image": "image-6.jpg" },
+                //             ]
+                //         }
+                //     ]
+                // },
+            }
+        }
+    };
+
+    let structureObj = structure.classic.home;
+    let contentObj = content.classic.home;
+
+    function generateContentFromStructure(structureObj, contentObj, insertValue) {
+
+        function isObject(thing) { return thing === Object(thing); } // Returns true if 'thing' is an object or array
+
+        function objLoop(objRef, contentRef) {
+            Object.keys(objRef).forEach(function (key) {
+
+                if(key === '__type__' || key === '__options__') return;
+
+                if(isObject(objRef[key]) && objRef[key]['__type__'] === 'template') {
+                    if(contentRef[key] === undefined) {
+                        contentRef[key] = [{}];
+                        Object.keys(objRef[key]).forEach(item => item!=='__type__' && item!=='__options__' ? contentRef[key][0][item] = undefined : '');
+                    }
+                    contentRef[key].forEach( item => objLoop(objRef[key], item) );
+                }
+
+                if(contentRef[key] === undefined) contentRef[key] = insertValue;
+            });
+        }
+
+        // Level 1, as it can't be a template
+        Object.keys(structureObj).forEach(function (key) {
+            if(contentObj[key] === undefined) {
+                contentObj[key] = {};
+                Object.keys(structureObj[key]).forEach(item => item!=='__options__' ? contentObj[key][item] = undefined : '');
+            }
+            objLoop(structureObj[key], contentObj[key]);
+        });
+    }
+
+    generateContentFromStructure(structureObj, contentObj, "LOREM IPSUM");
+
+    Vue.component('section-field', {
+        props: ['name', 'item', 'contentRef', 'itemContent', 'itemStructure', 'options', 'sectionlevel', 'compoundName', 'radioName'],
+        template: `<li v-if="sectionlevel === 1">
+                        <h2>{{ name }} <small v-if="options">:: {{ options }}</small></h2>
+                        <ul>
+                            <section-field style="border:5px solid rgba(0,0,0,0.1)"
+                                v-if="isNotMetaField(name2)"
+                                v-for="item2, name2 in item"
+                                :item="item2"
+                                :name="name2"
+                                :compound-name="currentCompoundName"
+                                :content-ref="contentRef"
+                                :itemContent="contentRef[name2]"
+                                :options="item2.__options__"
+                                :key="item2.id">
+                            </section-field>
+                        </ul>
+                    </li>
+                    <li v-else-if="!isTemplate">
+                        <div v-if="hasTemplateFields">
+                            <h2>{{ name }} <small v-if="options">:: {{ options }}</small></h2>
+                            <ul>
+                                <section-field style="border:2px solid greenyellow"
+                                    v-if="isNotMetaField(name2)"
+                                    v-for="item2, name2 in itemStructure"
+                                    :item="item2"
+                                    :name="itemIsObject ? name2 : name"
+                                    :compound-name="currentCompoundName"
+                                    :content-ref="contentRef"
+                                    :radio-name="itemStructure.item==='radio' ? compoundName : undefined"
+                                    :itemContent="itemIsObject ? itemContent[name2] : itemContent"
+                                    :options="item2.__options__"
+                                    :key="item2.id">
+                                </section-field>
+                            </ul>
+                        </div>
+                        <div v-else>
+                            <form-field style="border:1px solid blue"
+                                :name="name"
+                                :compound-name="currentCompoundName"
+                                :currentObjectRef="contentRef"
+                                :radio-name="radioName ? radioName : undefined"
+                                :itemType="itemType"
+                                :content="itemContent"
+                                :options="item.__options__">
+                            </form-field>
+                        </div>
+                    </li>
+                    <li v-else class="subsection">
+                        <h2>{{ name }} <small v-if="options">:: {{ options }}</small></h2>
+                        <ul>
+                            <section-field style="border:1px solid red"
+                                v-for="item2, name2 in itemContent"
+                                :item="item2"
+                                :name="name2"
+                                :compound-name="currentCompoundName"
+                                :content-ref="isObject(contentRef[name][name2]) ? contentRef[name][name2] : contentRef[name]"
+                                :itemStructure="item"
+                                :itemContent="itemContent[name2]"
+                                :options="options"
+                                :key="item2.id">
+                            </section-field>
+                        </ul>
+                   </li>`,
+        computed: {
+            itemIsObject() { // Returns true if item is an object or array
+                return this.item === Object(this.item);
+            },
+            isTemplate() {
+                return this.itemIsObject && this.item.__type__ === "template";
+            },
+            hasTemplateFields() {
+              return this.itemStructure !== undefined;
+            },
+            itemType() {
+                return this.itemIsObject ? this.item.__type__ : this.item;
+            },
+            currentCompoundName() {
+                return this.compoundName !== this.name ? `${this.compoundName}.${this.name}` : this.compoundName;
+            }
+
+        },
+        methods: {
+            isNotMetaField(name) {
+                // console.log(name);
+                return name !== '__type__' && name !== '__options__';
+            },
+            isObject(thing) { // Returns true if thing is an object or array
+                return thing === Object(thing);
+            }
+        }
+    });
+
+
+    Vue.component('form-field', {
+        props: ['name', 'content', 'itemType', 'options', 'compoundName', 'currentObjectRef', 'radioName'],
+        template: `<div>
+                        <div>{{ name }} : <strong>{{ itemType }}</strong> : {{ content }} :: <strong>{{ radioName ? radioName+" /" : '' }} {{ compoundName }}</strong> <span v-if="options">:: {{ options }}</span></div>
+                        <component :is="currentComponent"
+                            :name="name"
+                            :compound-name="compoundName"
+                            :currentObjectRef="currentObjectRef"
+                            :radio-name="radioName"
+                            :itemType="itemType"
+                            :content="content"
+                            :options="options">
+                        </component>
+                   </div>`,
+        data() {
+            return {
+                componentName: {
+                    text: 'c-text-input',
+                        textarea: 'c-text-input',
+                        checkbox: 'c-text-input',
+                        cta: 'c-text-input',
+                        radio: 'c-text-input',
+                }
+            }
+        },
+        computed: {
+            currentComponent() {
+                return this.componentName[this.itemType];
+            }
+        },
+    });
+
+    Vue.component('c-text-input', {
+        props: ['name', 'content', 'itemType', 'options', 'compoundName', 'currentObjectRef', 'radioName'],
+        template: `<div>
+                        <input type="text" v-model="currentObjectRef[name]">
+                   </div>`,
+        data() {
+            return {
+                'contentRef' : content.classic.home
+            }
+        },
+        computed: {
+
+        },
+    });
+
+    let vueInstance = new Vue({
+        el: '#vue-form',
+        data() {
+            return {
+                'structure' : structure.classic.home,
+                'content' : content.classic.home
+            }
+        },
+    });
+
+    setTimeout(function () {
+        // vueInstance.$set(vueInstance.structure.video_section, 'new', 'text');
+        // vueInstance.$set(vueInstance.content.video_section, 'new', 'new content');
+    }, 2000);
+
+
+    document.getElementById('submit').addEventListener('click', function () {
+        axios.post('submit.php', content)
+            .then(function (response) {
+                console.log(response);
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    });
+
+
+
+
+
+</script>
+
+
+</body>
+</html>
