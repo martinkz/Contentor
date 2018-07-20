@@ -97,9 +97,9 @@
                 "video_section": {
                     "title": "Video section lorem ipsum",
                     "simple_array": [
-                        "dsa",
-                        "fdg",
-                        "rwe"
+                        { "item": "dsa4" },
+                        { "item": "fdg2" },
+                        { "item": "rwe7" }
                     ],
                     "copy": "Lorem ipsum copy",
                     "video_carousel": [
@@ -206,7 +206,7 @@
                                     :compound-name="currentCompoundName"
                                     :content-ref="contentRef"
                                     :radio-name="itemStructure.item==='radio' ? compoundName : undefined"
-                                    :itemContent="itemIsObject ? itemContent[name2] : itemContent"
+                                    :itemContent="itemContent[name2]"
                                     :options="item2.__options__"
                                     :key="item2.id">
                                 </section-field>
@@ -232,7 +232,7 @@
                                 :item="item2"
                                 :name="name2"
                                 :compound-name="currentCompoundName"
-                                :content-ref="isObject(contentRef[name][name2]) ? contentRef[name][name2] : contentRef[name]"
+                                :content-ref="contentRef[name][name2]"
                                 :itemStructure="item"
                                 :itemContent="itemContent[name2]"
                                 :options="options"
@@ -263,9 +263,6 @@
                 // console.log(name);
                 return name !== '__type__' && name !== '__options__';
             },
-            isObject(thing) { // Returns true if thing is an object or array
-                return thing === Object(thing);
-            }
         }
     });
 
